@@ -1,0 +1,66 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Channel</th>
+                    <th>Source</th>
+                    <th>Coin</th>
+                    <th>Type</th>
+                    <th>Percent (%)</th>
+                    <th>Time (Sec)</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td> {{ data.client }}</td>
+                        <td> {{ data.channel.title }}</td>
+                        <td> {{ data.source }}</td>
+                        <td> {{ data.coin_name }}</td>
+                        <td> {{ data.type }}</td>
+                        <td> {{ data.percent }}</td>
+                        <td> {{ data.time }}</td>
+                        <td> {{ data.entry }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        {{ context|paginate_to:"10,True" }}
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            })
+        });
+    </script>
+{% endblock %}

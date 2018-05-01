@@ -1,0 +1,133 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate static %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+
+            <div class="col-sm-6">
+                <a href="javascript:;" id="i-search" title="Search Instagram Account" class="btn btn-primary btn-sm pull-right">Search Instagram Account</a>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>First Name </th>
+                    <th>Last Name </th>
+                    <th>Username</th>
+                    <th>Type</th>
+                    <th>Blacklisted?</th>
+                    <th>Created</th>
+                    <th>Action</th>
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td>{{ data.member_id }}</td>
+                        <td>{{ data.first_name }}</td>
+                        <td>{{ data.last_name }}</td>
+                        <td>{{ data.username }}</td>
+                        <td>{{ data.type }}</td>
+                        <td>{{ data.is_blacklisted }}</td>
+                        <td>{{ data.created }}</td>
+                        <td><a href="{% url 'core:i-whitelist' data.id %}" class="btn btn-primary btn-sm">Remove</a> </td>
+                   </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <link rel="stylesheet" href="{% static 'bootstrap3-dialog/css/bootstrap-dialog.min.css' %}"/>
+    <script src="{% static 'bootstrap3-dialog/js/bootstrap-dialog.min.js' %}"></script>
+    <script src="{% static 'js-cookie/js-cookie.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            });
+
+            $("#i-search").click(function () {
+                BootstrapDialog.show({
+                    message: 'Search Instagram Account: <input type="text" id="i-username" name="username" class="form-control">',
+                    buttons: [{
+                        label: 'Get Details',
+                        action: function(dialogRef) {
+                            if($("#i-username").val().trim().length>2){
+                                processFeed("{% url 'core:i-member-detail' 'xxx' %}".replace('xxx', $("#i-username").val().trim()), {}, "Fetching Instagram Member Details", true, "get", function(d){
+                                    if(d.msg=='success'){
+                                        u = d.iuser
+                                        BootstrapDialog.show({
+                                            message: '<img src="'+u.profile_pic_url+'" style="float: right; width: 100px" /><h3>'+ u.full_name +'</h3><h4>'+ u.username +' ('+ u.pk +')</h4>Group ID: <input type="text" id="gid" name="gid" class="form-control">',
+                                            buttons: [{
+                                                label: 'Blacklist',
+                                                action: function(dialogRef) {
+                                                    if($("#gid").val().trim().length>2){
+
+                                                        if (u.full_name.length > 0) {
+                                                            full = u.full_name.split(" ");
+                                                            first_name = full.shift()
+                                                            last_name = full.join()
+                                                        }else {
+                                                            first_name = last_name = "";
+                                                        }
+                                                        data = {"group_id": $("#gid").val(), "member_id": u.pk, "first_name": first_name, "last_name": last_name, "username": u.username, "type": "Instagram" }
+                                                        processFeed("{% url 'core:i-member-blacklist' %}", data, "Blacklisting Instagram Member", true, "POST", function(d){
+                                                            if(d.msg=='success'){
+                                                                BootstrapDialog.show({ message: "Member Banned",
+                                                                    onhide: function(dialogRef){
+                                                                        location.href ="{% url 'core:i-blacklisted' %}";
+                                                                    }
+                                                                });
+                                                            }else{
+                                                                BootstrapDialog.show({ message: d.responseText});
+                                                            }
+                                                        }, function (e) {
+                                                            BootstrapDialog.show({ message: 'This request failed'});
+                                                        })
+                                                    }
+                                                }
+                                            },{
+                                                label: 'Close',
+                                                action: function(dialogRef) {
+                                                    dialogRef.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                }, function (e) {
+                                    BootstrapDialog.show({ message: 'This request failed'});
+                                })
+                            }
+                        }
+                    },{
+                        label: 'Close',
+                        action: function(dialogRef) {
+                            dialogRef.close();
+                        }
+                    }]
+                });
+            })
+        });
+    </script>
+{% endblock %}

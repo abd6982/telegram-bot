@@ -1,0 +1,38 @@
+{% extends "account/base.html" %}
+{% load i18n static bootstrap humanize %}
+
+
+{% block content %}
+    <div class="gtco-container">
+        <div class="row">
+            <div class='col-sm-6 col-sm-offset-3 animate-box' style="z-index: 20000;">
+                {#                    <h4>Login</h4>#}
+                <h5><strong>Welcome</strong> login to get started!</h5>
+                <form role="form" id='loginform' action="{% url 'account:login' %}" method="post">
+                    {% if form.errors %}
+                        <div class="col-xs-12">
+                            <span>Incorrect username or password. <a href="" title="Reset My Password">Forgot Password</a> </span>
+                        </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                            <div class="col-xs-12">You don't have access to this page. To proceed, please login with an account that has access.</div>
+                        {% else %}
+                            <div class="col-xs-12"></div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% csrf_token %}
+                    {{ form|bootstrap }}
+                    <input type="hidden" name="next" value="{{ next }}"/>
+
+                    <span class="check-left"><input type="checkbox">Remember me</span>
+                    <!-- <span class="check-right"><a href="#">Forgot password?</a></span> -->
+                    <div class="clearfix"></div>
+                    <button class="btn btn-info btn-block" type="submit">Sign in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

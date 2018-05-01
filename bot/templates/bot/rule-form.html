@@ -1,0 +1,387 @@
+{% extends 'bot/base.html' %}
+{% load i18n static bootstrap %}
+
+{% block content %}
+    <style>
+        legend small{
+            margin-left: 40px;
+            font-size: 0.8em;
+            color: #bfb9b9;
+            font-style: italic;
+        }
+    </style>
+    <div class="container content-inner">
+        <div class="main-col">
+            <section class="jumbo-card card">
+                <form action="" method="post" >
+                    {% if msg %}
+                        <div class="alert alert-success alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ msg }}
+                        </div>
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-warning alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    {% csrf_token %}
+
+                    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+                        <fieldset>
+                            <legend>Text <small>[Text, Contact, Location, Venue, Url]</small></legend>
+                            <div class="form-group" data-type="text">
+                                <div class="form-group">{{ form.text_is_allowed }}</div>
+
+                                <div class="form-group" data-type="text-allowed" id="text-is-rate-limited">
+                                    {{ form.text_is_rate_limited }}
+                                </div>
+                                <div class="form-group" data-type="text-allowed" id="text-allowed-zone">
+                                    <div class="form-group" style="width: 150px; display: inline-block; margin-bottom: 0;" >
+                                        <div class="input-group">
+                                            <div class="input-group-addon">If user sends </div>
+                                            {{ form.text_rate_counter }}
+                                            <div class="input-group-addon">messages in</div>
+                                            {{ form.text_rate_interval }}
+                                            <div class="input-group-addon">seconds</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="text-allowed" id="text-forbidden">
+                                    <div class="form-group" style="width: 100%; display: inline-block; margin-bottom: 0;" >
+                                        <div class="input-group" style="padding-bottom: 15px;">
+                                            <div class="input-group-addon">Forbidden Keywords</div>
+                                            {{ form.text_keywords }}
+                                        </div>
+                                        <div class="input-group">
+                                            <div class="input-group-addon">Forbidden Regex</div>
+                                            {{ form.text_regex }}
+                                        </div>
+                                        <small class="pull-right text-muted">Example of <a href="//pythex.org?regex=http[s]?://.*&test_string=http://www.softdongle.com" target="_blank">regex</a>
+                                            matching all url: <i>http[s]?://.*; www.* </i></small>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.text_delete_forbidden }} Delete message containing forbidden text?
+                                        </label>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group" data-type="text-banned" id="text-allowed-action-zone">
+                                    <label style="font-weight: normal;">Action if Rate Exceeded/Forbidden message found</label>
+                                    <div>
+                                        {{ form.text_action_allowed }}
+                                        <div class="form-group" style="width: 150px; display: inline-block;" >
+                                            <label class="sr-only" for="id_text_limit_time_allowed"></label>
+                                            <div class="input-group">
+                                                {{ form.text_limit_time_allowed }}
+                                              <div class="input-group-addon">minutes</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="text-banned" id="text-banned-zone">
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.text_can_delete }} Delete such message?
+                                        </label>
+                                    </div>
+                                    {{ form.text_action_banned }}
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_text_limit_time_banned"></label>
+                                        <div class="input-group">
+                                            {{ form.text_limit_time_banned }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+                        <fieldset>
+                            <legend>Photo <small>[Sticker, Photo, Animation]</small></legend>
+                            <div class="form-group" data-type="photo">
+                                <div class="form-group">
+                                    {{ form.photo_is_allowed }}
+                                </div>
+                                <div class="form-group" data-type="photo-allowed" id="photo-is-rate-limited">
+                                    {{ form.photo_is_rate_limited }}
+                                </div>
+
+
+                                <div class="form-group" data-type="photo-allowed" id="photo-allowed-zone">
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <div class="input-group">
+                                            <div class="input-group-addon">If user sends </div>
+                                            {{ form.photo_rate_counter }}
+                                            <div class="input-group-addon">messages in</div>
+                                            {{ form.photo_rate_interval }}
+                                            <div class="input-group-addon">seconds</div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    {{ form.photo_action_allowed }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_photo_limit_time_allowed"></label>
+                                        <div class="input-group">
+                                            {{ form.photo_limit_time_allowed }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="photo-banned" id="photo-banned-zone">
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.photo_can_delete }}  Delete such message?
+                                        </label>
+                                    </div>
+                                    {{ form.photo_action_banned }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_photo_limit_time_banned"></label>
+                                        <div class="input-group">
+                                            {{ form.photo_limit_time_banned }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+
+                    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+                        <fieldset>
+                            <legend>Audio <small>[Audio, Audio Note]</small></legend>
+                            <div class="form-group" data-type="audio">
+                                <div class="form-group">
+                                    {{ form.audio_is_allowed }}
+                                </div>
+                                <div class="form-group" data-type="audio-allowed" id="audio-is-rate-limited">
+                                    {{ form.audio_is_rate_limited }}
+                                </div>
+
+
+                                <div class="form-group" data-type="audio-allowed" id="audio-allowed-zone">
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <div class="input-group">
+                                            <div class="input-group-addon">If user sends </div>
+                                                {{ form.audio_rate_counter }}
+                                            <div class="input-group-addon">messages in</div>
+                                                {{ form.audio_rate_interval }}
+                                            <div class="input-group-addon">seconds</div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    {{ form.audio_action_allowed }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_audio_limit_time_allowed"></label>
+                                        <div class="input-group">
+                                            {{ form.audio_limit_time_allowed }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="audio-banned" id="audio-banned-zone">
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.audio_can_delete }}  Delete such message?
+                                        </label>
+                                    </div>
+
+                                    {{ form.audio_action_banned }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_audio_limit_time_banned"></label>
+                                        <div class="input-group">
+                                            {{ form.audio_limit_time_banned }}
+                                            <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+
+                    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+                        <fieldset>
+                            <legend>Video <small>[Video, Video Note]</small></legend>
+                            <div class="form-group" data-type="video">
+                                <div class="form-group">
+                                    {{ form.video_is_allowed }}
+                                </div>
+                                <div class="form-group" data-type="video-allowed" id="video-is-rate-limited">
+                                    {{ form.video_is_rate_limited }}
+                                </div>
+
+
+                                <div class="form-group" data-type="video-allowed" id="video-allowed-zone">
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <div class="input-group">
+                                            <div class="input-group-addon">If user sends </div>
+                                            {{ form.video_rate_counter }}
+                                            <div class="input-group-addon">messages in</div>
+                                            {{ form.video_rate_interval }}
+                                            <div class="input-group-addon">seconds</div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    {{ form.video_action_allowed }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_video_limit_time_allowed"></label>
+                                        <div class="input-group">
+                                            {{ form.video_limit_time_allowed }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="video-banned" id="video-banned-zone">
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.video_can_delete }} Delete such message?
+                                        </label>
+                                    </div>
+                                    {{ form.video_action_banned }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_video_limit_time_banned"></label>
+                                        <div class="input-group">
+                                            {{ form.video_limit_time_banned }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+
+                    <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1 col-xs-12">
+                        <fieldset>
+                            <legend>Others <small>[Document, Game]</small></legend>
+                            <div class="form-group" data-type="others">
+                                <div class="form-group">
+                                    {{ form.others_is_allowed }}
+                                </div>
+                                <div class="form-group" data-type="others-allowed" id="others-is-rate-limited">
+                                    {{ form.others_is_rate_limited }}
+                                </div>
+
+
+                                <div class="form-group" data-type="others-allowed" id="others-allowed-zone">
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <div class="input-group">
+                                            <div class="input-group-addon">If user sends </div>
+                                            {{ form.others_rate_counter }}
+                                            <div class="input-group-addon">messages in</div>
+                                            {{ form.others_rate_interval }}
+                                            <div class="input-group-addon">seconds</div>
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    {{ form.others_action_allowed }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_others_limit_time_allowed"></label>
+                                        <div class="input-group">
+                                            {{ form.others_limit_time_allowed }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" data-type="others-banned" id="others-banned-zone">
+                                    <div class="checkbox">
+                                        <label>
+                                            {{ form.others_can_delete }} Delete such message?
+                                        </label>
+                                    </div>
+                                    {{ form.others_action_banned }}
+
+                                    <div class="form-group" style="width: 150px; display: inline-block;" >
+                                        <label class="sr-only" for="id_others_limit_time_banned"></label>
+                                        <div class="input-group">
+                                            {{ form.others_limit_time_banned }}
+                                          <div class="input-group-addon">minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <button class="btn btn-raised btn-block btn-primary" type="submit"><i class="fa fa-save"></i> Save</button>
+
+                </form>
+            </section>
+        </div>
+
+    </div>
+
+    <style>
+        fieldset{
+            padding: 10px 10px 0 10px;
+            margin-bottom: 20px;
+            border: 1px solid #d2caca;
+            border-radius: 4px;
+        }
+    </style>
+{% endblock %}
+
+{% block javascript %}
+
+    <link rel="stylesheet" href="{% static 'bootstrap-toggle/css/bootstrap-toggle.min.css' %}"/>
+    <script src="{% static 'bootstrap-toggle/js/bootstrap-toggle.min.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+            $('input[data-type*="-allow"]').change(function() {
+                type = $(this).data("type").split("-")[0];
+                console.log(type)
+                $('div[data-type="'+type+'-allowed"], div[data-type="'+type+'-banned"]').hide();
+                if($(this).is(":checked")){
+                    $("#"+type+"-forbidden").show();
+                    $("#"+type+"-banned-zone").hide();
+                    $("#"+type+"-allowed-zone, #"+type+"-is-rate-limited, #"+type+"-allowed-action-zone").show();
+                    if($("#id_"+type+"_is_rate_limited").is(":checked")){
+                        $("#"+type+"-allowed-zone").show();
+                    }else {
+                        $("#"+type+"-allowed-zone").hide();
+                    }
+                }else {
+                    $("#"+type+"-forbidden").hide();
+                    $("#"+type+"-allowed-zone, #"+type+"-is-rate-limited, #"+type+"-allowed-action-zone").hide();
+                    $("#"+type+"-banned-zone").show();
+                }
+            });
+
+            $('input[type="checkbox"][data-type*="is-rate-limited"]').change(function () {
+                type = $(this).data("type").split("-")[0];
+                if($(this).is(":checked")){
+                    $("#"+type+"-allowed-zone").show()
+                }else {
+                    $("#"+type+"-allowed-zone").hide()
+                }
+            });
+
+            $('input[data-type*="-allow"]').trigger("change", true);
+        });
+    </script>
+{% endblock %}

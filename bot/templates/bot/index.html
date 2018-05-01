@@ -1,0 +1,155 @@
+{% extends "bot/base.html" %}
+{% load static %}
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <div class="row" style="margin-top: 40px">
+        <div class="col-sm-12">
+            <h1>Telegram Clients</h1>
+            {% if msg %}
+                <div class="alert alert-warning">
+                    <a href="#" class="close" data-dismiss="alert">&times;</a>
+                    {{ msg }}
+                </div>
+            {% endif %}
+            <table class="table table-bordered table-hover table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Phone</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Processor</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for c in clients %}
+                    <tr>
+                        <td><a href="{% url 'core:client-details' c.api_id %}" title="View Messages">{{ c.api_id }}</a></td>
+                        <td>{{ c.phone }}</td>
+                        <td>{{ c.title }}</td>
+                        <td>{% if c.status %}<label class="label label-success">Logged In</label>{% else %}<label class="label label-danger">Logged Out</label>{% endif %}</td>
+                        <td>{% if c.active_handlers.0 %}
+                            <a href="{% url 'core:processor-stop' c.api_id c.handlers.0.1 %}" class="btn btn-danger btn-sm" title="Stop {{ c.handlers.0.0 }}">Stop {{ c.handlers.0.0 }}</a>
+                        {% else %}
+                            <a href="{% url 'core:processor-start' c.api_id c.handlers.0.1 %}" class="btn btn-primary btn-sm" title="Start {{ c.handlers.0.0 }}">Start {{ c.handlers.0.0 }}</a>
+                        {% endif %}
+                        </td>
+                        <td>
+                            {% if c.status %}
+                                <a href="{% url 'core:client-logout' c.api_id %}" class="btn btn-danger btn-sm">Log out</a>
+                            {% else %}
+                                <button type="button" class="btn btn-primary btn-sm" data-id="log-in-request" data-aid="{{ c.api_id }}" data-url="{% url 'core:client-login-request' c.api_id %}" data-url2="{% url 'core:client-login' c.api_id '00' %}">Log in</button>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" id="log-in-modal" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Client Login</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="control-label" for="id_code">Authentication Code <small class="text-muted"><i></i></small></label>
+                        <div class=" ">
+                            <input type="text" name="code" maxlength="30" class=" form-control" id="id_code">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="log-in-button" class="btn btn-primary">Sign In</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+{% endblock %}
+
+{% block javascript %}
+{#    <script src="{% static 'js-cookie/js-cookie.js' %}"></script>#}
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script>
+        $(document).ready(function (e) {
+            $("button[data-id='log-in-request']").click(function (d) {
+                var url = $(this).data("url");
+                var url2 = $(this).data("url2");
+                var api_id = $(this).data("aid");
+                $("label[for='id_code'] small i").html("");
+                console.log(url)
+                if(!($("#log-in-modal").data('bs.modal') || {}).isShown){
+                    $.ajax({
+                        type: 'post',
+                        url: url,
+                        data: {},
+                        dataType: "json",
+                        beforeSend: function (xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));}
+                        },
+                        success: function (d) {
+                            $("label[for='id_code'] small i").html(d.msg);
+                            if (d.type == 'Success') {
+                                $('#log-in-modal').modal('show');
+                                $("#log-in-button").click(function (e) {
+                                    if ($("#id_code").val().trim().length > 4) {
+                                        console.log(url2)
+                                        $.ajax({
+                                            type: 'post',
+                                            url: url2.replace("00", $("#id_code").val()),
+                                            data: {},
+                                            dataType: "json",
+                                            beforeSend: function (xhr, settings) {
+                                                console.log(this.url2)
+                                                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                                    xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                                                }
+                                            },
+                                            success: function (d) {
+                                                console.log(d.msg)
+                                                location.href = ".";
+                                            },
+                                            error: function (d) {
+                                                console.log("Error")
+                                            },
+                                        });
+                                    } else {
+                                        alert("Please enter a valid token")
+                                    }
+                                });
+                            }else{
+                                alert(d.msg)
+                            }
+                        },
+                        error: function (d) {
+                            console.log("Error")
+                        },
+                    });
+                }
+            });
+
+            return
+            $('#log-in-modal').modal('show').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                var recipient = button.data('whatever') // Extract info from data-* attributes
+                // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+                // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+                var modal = $(this)
+                modal.find('.modal-title').text('New message to ' + recipient)
+                modal.find('.modal-body input').val(recipient)
+            })
+
+        })
+
+    </script>
+{% endblock %}
+
+

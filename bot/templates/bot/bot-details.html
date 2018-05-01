@@ -1,0 +1,54 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>Username</th>
+                    <th>First Name </th>
+
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td>{{ data.id }}</td>
+                        <td>{{ data.username }}</td>
+                        <td>{{ data.first_name }}</td>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            })
+        });
+    </script>
+{% endblock %}

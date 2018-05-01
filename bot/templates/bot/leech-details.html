@@ -1,0 +1,125 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate static %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+            <div class="col-sm-6">
+                <a href="javascript:;" id="t-search" title="Search Telegram Account" class="btn btn-primary btn-sm pull-right">Search Telegram Account</a>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>First Name </th>
+                    <th>Last Name </th>
+                    <th>Username</th>
+                    <th>Group Name</th>
+                    <th>Entry</th>
+                    <th>Action</th>
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td>{{ data.member.member_id }}</td>
+                        <td>{{ data.member.first_name }}</td>
+                        <td>{{ data.member.last_name }}</td>
+                        <td>{{ data.member.username }}</td>
+                        <td>{{ data.group.title }}</td>
+                        <td>{{ data.created }}</td>
+                        <td><a href="{% url 'core:leech-remove' data.member.id data.group.id %}" class="btn btn-danger btn-sm" data-path="">Delete Leech</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        {{ context|paginate_to:"10,True" }}
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <link rel="stylesheet" href="{% static 'bootstrap3-dialog/css/bootstrap-dialog.min.css' %}"/>
+    <script src="{% static 'bootstrap3-dialog/js/bootstrap-dialog.min.js' %}"></script>
+    <script src="{% static 'js-cookie/js-cookie.js' %}"></script>
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            });
+
+            $("#t-search").click(function () {
+                BootstrapDialog.show({
+                    message: 'Search Telegram Account: <input type="text" id="t-username" name="username" class="form-control">',
+                    buttons: [{
+                        label: 'Get Details',
+                        action: function(dialogRef) {
+                            if($("#t-username").val().trim().length>2){
+                                processFeed("{% url 'core:t-member-detail' 'xxx' %}".replace('xxx', $("#t-username").val().trim()), {}, "Fetching Telegram Member Details", true, "get", function(d){
+                                    if(d.msg=='success'){
+                                        u = d.tuser
+                                        BootstrapDialog.show({
+                                            message: '<h3>'+ u.first_name +' '+ u.last_name +'</h3><h4>@'+ u.username +' ('+ u.id +')</h4>Group ID: <input type="text" id="gid" name="gid" class="form-control">',
+                                            buttons: [{
+                                                label: 'Make Leech',
+                                                action: function(dialogRef) {
+                                                    if($("#gid").val().trim().length>2){
+                                                        data = {"group_id": $("#gid").val(), "member_id": u.id, "first_name": u.first_name, "last_name": u.last_name, "username": u.username, "type": "Telegram" }
+                                                        console.log(data)
+                                                        console.log("{% url 'core:t-member-detail' %}")
+                                                        processFeed("{% url 'core:t-member-detail' %}", data, "Making a Leech Member", true, "POST", function(d){
+                                                            if(d.msg=='success'){
+                                                                BootstrapDialog.show({ message: "Member Promoted to Leech",
+                                                                    onhide: function(dialogRef){
+                                                                        location.href =".";
+                                                                    }
+                                                                });
+                                                            }else{
+                                                                BootstrapDialog.show({ message: d.responseText});
+                                                            }
+                                                        }, function (e) {
+                                                            BootstrapDialog.show({ message: 'This request failed'});
+                                                        })
+                                                    }
+                                                }
+                                            },{
+                                                label: 'Close',
+                                                action: function(dialogRef) {
+                                                    dialogRef.close();
+                                                }
+                                            }]
+                                        });
+                                    }
+                                }, function (e) {
+                                    BootstrapDialog.show({ message: 'This request failed'});
+                                })
+                            }
+                        }
+                    },{
+                        label: 'Close',
+                        action: function(dialogRef) {
+                            dialogRef.close();
+                        }
+                    }]
+                });
+            })
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'bot/base.html' %}
+{% load i18n static bootstrap %}
+
+{% block content %}
+    <div class="container content-inner">
+        <div class="main-col">
+            <section class="jumbo-card card">
+                <form action="" method="post" >
+
+                    {% csrf_token %}
+                    {{ form|bootstrap }}
+                    <button class="btn btn-raised btn-block btn-primary" type="submit">Register</button>
+
+                </form>
+            </section>
+        </div>
+
+    </div>
+{% endblock %}

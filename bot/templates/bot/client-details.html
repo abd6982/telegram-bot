@@ -1,0 +1,80 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>Phone</th>
+                    <th>First Name </th>
+                    <th>Last Name </th>
+                    <th>Username</th>
+                    <th>Access Hash</th>
+                    <th>Last Updated</th>
+                    <th>Enabled</th>
+{#                    <th>Status</th>#}
+
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td>{{ data.id }}</td>
+                        <td>{{ data.phone }}</td>
+                        <td>{{ data.first_name }}</td>
+                        <td>{{ data.last_name }}</td>
+                        <td>{{ data.username }}</td>
+                        <td>{{ data.access_hash }}</td>
+                        <td>{{ data.update }}</td>
+                        <td>{% if data.enabled %}
+                                <i class="fa fa-check text-success"></i>
+                            {% else %}
+                                <i class="fa fa-ban text-danger"></i>
+                            {% endif %}
+                        </td>
+{#                        <td>#}
+{#                            {% if c.status %}#}
+{#                                <a href="{% url 'core:client-logout' data.id %}" class="btn btn-danger btn-sm">Log out</a>#}
+{#                            {% else %}#}
+{#                                <button type="button" class="btn btn-primary btn-sm" data-id="log-in-request" data-aid="{{ data.id  }}" data-url="{% url 'core:client-login-request' data.id  %}" data-url2="{% url 'core:client-login' data.id  '00' %}">Log in</button>#}
+{#                            {% endif %}#}
+{#                        </td>#}
+{#                        <td>{% if c.status %}<label class="label label-success">Logged In</label>{% else %}<label class="label label-danger">Logged Out</label>{% endif %}</td>#}
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        {{ context|paginate_to:"10,True" }}
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            })
+        });
+    </script>
+{% endblock %}

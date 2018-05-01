@@ -1,0 +1,134 @@
+{% extends 'bot/base.html' %}
+
+{% load i18n paginate static %}
+
+{% block jumbotron %}{% endblock %}
+{% block content %}
+    <style>.pagination{width: 100%;}</style>
+    <div class="container">
+
+        <div class="row" style="margin-top: 80px">
+            <div class="col-sm-6">
+                <form action="" method="GET" id="search-form">{% csrf_token %}
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="search-query" name="q" value="{{ q|default:'' }}" placeholder="Search for message">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit" id="search-button"><i class="fa fa-search"></i> </button>
+                        </span>
+                    </div><!-- /input-group -->
+                </form>
+            </div>
+        </div><!-- /.row -->
+
+
+        <table class="table" style="font-size: 12px;">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>Title</th>
+                    <th>Username</th>
+                    <th>Type</th>
+{#                    <th>Category</th>#}
+{#                    <th>Enabled?</th>#}
+                    <th>Entry</th>
+{#                    <th>Action</th>#}
+
+            </thead>
+            <tbody>
+                {% for data in context %}
+                    <tr>
+                        <td>{{ data.id }}</td>
+                        <td>{{ data.title }}</td>
+                        <td>{{ data.username }}</td>
+                        <td>{{ data.type|title }}</td>
+{#                        <td>{% if data.category %}Dx{{ data.category }}{% else %}N/A{% endif %}</td>#}
+{#                        <td>#}
+{#                            {% if data.enabled %}<h4 style="margin: 0;"><label class="label label-success">Enabled</label></h4>{% else %}<h4 style="margin: 0;"><label class="label label-danger">Disabled</label></h4>{% endif %}#}
+{#                        </td>#}
+                        <td>{{ data.created }}</td>
+{#                        <td>#}
+{#                            <button class="btn btn-primary btn-sm" title="Edit" data-action="edit" data-value="{{ data.category }}" data-id="{{ data.id }}"><i class="fa fa-edit"></i></button>#}
+{#                            {% if data.enabled %}<a href="javascript:;" class="btn btn-warning btn-sm" title="Diable" data-path="{% url 'core:group-action' data.id 'disable' %}">Disable</a>{% else %}<a href="javascript:;" class="btn btn-success btn-sm" title="Enable" data-path="{% url 'core:group-action' data.id 'enable' %}">Enable</a>{% endif %}#}
+{#                        </td>#}
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        {{ context|paginate_to:"10,True" }}
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="{% static 'bootstrap3-dialog/js/bootstrap-dialog.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap3-dialog/css/bootstrap-dialog.min.css' %}" />
+    <script>
+        $(document).ready(function () {
+            $("#search-form").submit(function (d) {
+                d.preventDefault();
+                location.href = "./?q="+$("#search-query").val();
+            });
+
+            $("td a[data-path]").click(function (d) {
+                path = $(this).data("path")
+                console.log("**********", path);
+                $.ajax({
+                    type: 'post',
+                    url: path,
+                    data: {},
+                    dataType: "json",
+                    beforeSend: function (xhr, settings) {
+                        var csrftoken = Cookies.get('csrftoken');
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    },
+                    success: function (d) {
+                        if (d.type=="Success"){location.href ="."}
+                    },
+                    error: function (d) {
+                        console.log("Error")
+                    },
+                });
+            });
+
+            $("button[data-action='edit']").click(function (e) {
+                value= $(this).data('value')
+                id= $(this).data("id")
+                BootstrapDialog.show({
+                      title: "<i class='fa fa-edit'></i> Change Category",
+                      message: "<input type='number' name='category' id='category' value='"+value+"' class='form-control' placeholder='Number of miuntes' >",
+                      buttons: [{
+                            label: 'Cancel',
+                            action: function (dialog) {dialog.close();}
+                        }, {
+                            label: 'Update',
+                            cssClass: 'btn-primary',
+                            action: function (dialog) {
+                                if (parseInt($("#category").val()) < 2 || parseInt($("#category").val()) > 60) {
+                                    pwd("Category must be between 5 - 60 (mins)", true);
+                                    return;
+                                }
+                                processFeed("{% url 'core:group-edit' '000' 'update' %}".replace("000", id), {'category': $("#category").val()}, 'Processing Your Request...', false, 'POST', function (d) {
+                                    if (d.type == 'Success') {
+                                        BootstrapDialog.alert({
+                                            title: "Server Response",
+                                            message: d.msg,
+                                            onhide: function () {
+                                                location = '{% url 'core:group-list' %}'
+                                            }
+                                        });
+                                    } else {
+                                        BootstrapDialog.alert(d.msg)
+                                    }
+                                }, function (d) {
+                                    BootstrapDialog.alert(d.responseText)
+                                });
+                            }
+                        }]
+                    })
+            });
+        });
+    </script>
+{% endblock %}
