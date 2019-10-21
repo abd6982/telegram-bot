@@ -27,5 +27,5 @@ scipy==1.0.0
 six==1.11.0
 Telethon==0.17.3
 Unidecode==1.0.22
-urllib3==1.22
+urllib3==1.24.2
 vine==1.1.4
